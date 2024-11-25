@@ -92,7 +92,7 @@ class Render_Text:
         width, ratio, 
         top_left_x, top_left_y, yaw, num_rows,
         a_prompt, n_prompt, num_samples, image_resolution, ddim_steps, guess_mode, strength, scale, seed, eta,
-        ):
+        font_name,):
         if seed == -1:
             seed = random.randint(0, 65535)
         seed_everything(seed)
@@ -115,7 +115,8 @@ class Render_Text:
                     (image_resolution, image_resolution),
                     [bbox],
                     [rendered_txt],
-                    [num_rows]
+                    [num_rows],
+                    font_name=font_name
                     )
                 whiteboard_img = whiteboard_img.convert("RGB")
                 
@@ -304,4 +305,4 @@ class Render_Text:
             return [whiteboard_img] + results
         else:
             return results
-        
+ 

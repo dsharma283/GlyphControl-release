@@ -39,6 +39,7 @@ def test(
     render_none,
     only_default_prompt_sd = False,
     default_prompt_sd = "",
+    font_name="calibri"
 ):  
     # add seed
     if seed == -1:
@@ -152,7 +153,8 @@ def test(
             strength, 
             scale, 
             seed, 
-            eta
+            eta,
+            args.font_name
         )
         all_results = render_tool.process(*inputs)
         img_array_list = all_results[1:] if not render_none else all_results
@@ -169,10 +171,10 @@ def test(
                 ocr_lev.update(rendered_text, ocr_result)
             if not args.not_save_img:
                 result_im = Image.fromarray(result)
-                result_path = os.path.join(save_path, rendered_text)
+                result_path = os.path.join(save_path, f"{i}")#rendered_text)
                 if not os.path.exists(result_path):
                     os.makedirs(result_path)
-                result_im.save(os.path.join(result_path, f"{rendered_text}_{idx}.jpg"))
+                result_im.save(os.path.join(result_path, f"devanagari_{idx}.jpg"))#f"{rendered_text}_{idx}.jpg"))
         if not args.not_save_img:
             prompt_i = prompts[i] if not only_default_prompt_sd else default_prompt_sd
             if a_prompt == "": 
@@ -182,7 +184,7 @@ def test(
             with open(os.path.join(result_path, "prompt.txt"), 'w') as fp:
                 fp.write( prompt_i + '\n')
         if not render_none and args.save_glyph_images:
-            all_results[0].save(os.path.join(result_path, f"{rendered_text}_glyph_image.jpg"))
+            all_results[0].save(os.path.join(result_path, f"{idx}_glyph_image.jpg"))#f"{rendered_text}_glyph_image.jpg"))
         torch.cuda.empty_cache()
         
     if args.do_ocr_eval:
@@ -472,7 +474,11 @@ def parse_args():
         "--save_glyph_images",
         action= "store_true",
         help="whether to save glyph images",
-    ) 
+    )
+    parser.add_argument(
+        "--font_name", type=str, default="calibri",
+        help="Font to be used when running the evaluation",
+    )
     return parser
 
 if __name__ == "__main__":
@@ -554,6 +560,7 @@ if __name__ == "__main__":
                 render_none,
                 only_default_prompt_sd,
                 default_prompt_sd,
+                font_name=args.font_name
             )
     else:
         test(
@@ -578,4 +585,5 @@ if __name__ == "__main__":
                 render_none,
                 only_default_prompt_sd,
                 default_prompt_sd,
-            )    
+                font_name=args.font_name
+            )
