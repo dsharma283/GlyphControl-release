@@ -29,24 +29,42 @@ with open('captions.json', 'w') as of:
 #prompt = "What hindi text is present in this Image?"
 #prompt = "Perform OCR on this image"
 prompt = "Which Hindi text is present in the Image?"
-input_csv = f'data/recognition/test_hindi.csv'
-base_impath = f'data/detection'
 
-with open(input_csv, 'r') as inp:
-    images_paths = inp.readlines()
+#input_csv = f'data/BSTD/recognition/test_hindi.csv'
+#base_impath = f'data/BSTD/detection'
+
+input_csv = ''
+base_impath = f'data/ILST/IIIT-ILST/Devanagari'
 
 imgs = []
-for img_path in images_paths:
-    tmp = img_path.split('_')[0].split('/')[-1]
-    im_base = os.path.join(base_impath, tmp)
+if 'BSTD' in base_impath:
+    infix = f'bstd'
+    with open(input_csv, 'r') as inp:
+        images_paths = inp.readlines()
 
-    imname = img_path.split('_')[1:3]
-    imname = imname[0] + '_' + imname[1] + '.jpg'
-    img_path = os.path.join(im_base, imname)
-    if os.path.exists(img_path) is False:
-        continue
-    imgs.append(img_path)
-imgs = list(set(imgs))
+    for img_path in images_paths:
+        tmp = img_path.split('_')[0].split('/')[-1]
+        im_base = os.path.join(base_impath, tmp)
+
+        imname = img_path.split('_')[1:3]
+        imname = imname[0] + '_' + imname[1] + '.jpg'
+        img_path = os.path.join(im_base, imname)
+        if os.path.exists(img_path) is False:
+            continue
+        imgs.append(img_path)
+    imgs = list(set(imgs))
+elif 'ILST' in base_impath:
+    infix = f'ilst'
+    imglist = os.listdir(base_impath)
+    imgs, xmls = [], []
+    for imp in imglist:
+        imp = os.path.join(base_impath, imp)
+        if imp.endswith('.jpg'):
+            imgs.append(imp)
+        if imp.endswith('.xml'):
+            xmls.append(imp)
+        if imp.endswith('.py') or imp == 'cropped':
+            continue
 
 model = InstructBlipForConditionalGeneration.from_pretrained("Salesforce/instructblip-vicuna-13b")
 processor = InstructBlipProcessor.from_pretrained("Salesforce/instructblip-vicuna-13b")
@@ -58,7 +76,6 @@ model.to(device)
 desc_caption = {}
 for img in imgs:
     imname = img #os.path.join(impath, img)
-    print(imname)
     image = Image.open(imname).convert("RGB")
     inputs = processor(images=image, text=prompt, return_tensors="pt").to(device)
     outputs = model.generate(**inputs, do_sample=False, num_beams=5,
@@ -77,8 +94,5 @@ for img in imgs:
                             'description': generated_text
                         }
 
-with open('captions_description.json', 'w') as of:
+with open(f'captions_description_{infix}.json', 'w') as of:
     of.write(json.dumps(desc_caption))
-
-
-
